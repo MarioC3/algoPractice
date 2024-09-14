@@ -1,4 +1,5 @@
 function binarySearch(arr, startIndex, target) {
+	// O(log n)
 	let low = startIndex + 1;
 	let high = arr.length - 1;
 
