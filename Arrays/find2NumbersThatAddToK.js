@@ -55,7 +55,7 @@ function findSum(nums, k) {
 	// 	}
 	// }
 
-	// C) With Binary Search
+	// C) With Binary Search -> O(n log n)
 	const numsSorted = nums.sort((a, b) => a - b);
 	const n = numsSorted.length;
 
