@@ -1,4 +1,45 @@
+const isCyclic = (input) => {
+	const seen = new Set();
+
+	const cyclicHelper = (value) => {
+		if (typeof value !== "object" || value === null) return false;
+
+		if (seen.has(value)) return true;
+
+		seen.add(value);
+		return Object.values(value).some(cyclicHelper);
+	};
+
+	return cyclicHelper(input);
+};
+
+const escape_quote = /"/g;
+
 const jsonStringify = (val) => {
+	if (isCyclic(val))
+		throw new TypeError("Converting circular structure to JSON");
+
+	if (typeof val === "bigint")
+		throw new TypeError("Do not know how to serialize a BigInt");
+
+	if (val === null) return "null";
+
+	const type = typeof val;
+
+	if (type === "number") {
+		if (Number.isNaN(val) || !Number.isFinite(val)) return "null";
+		return String(val);
+	}
+
+	if (type === "boolean") return String(val);
+
+	if (type === "function" || type === "symbol" || type === "undefined")
+		return undefined;
+
+	if (type === "string") return `"${val.replace(escape_quote, '\\"')}"`;
+
+	if (typeof val.toJSON === "function") return jsonStringify(val.toJSON());
+
 	if (Array.isArray(val)) {
 		const arrayVals = val.map((item) => {
 			if (
@@ -8,55 +49,46 @@ const jsonStringify = (val) => {
 			) {
 				return String(null);
 			} else {
-				jsonStringify(item);
+				return jsonStringify(item);
 			}
 		});
 		return `[${arrayVals.join(",")}]`;
 	}
 
-	if (typeof val === "object" && val !== null) {
-		const objEntries = Object.entries(val).map(([objKey, objVal]) => {
-			if (typeof objKey === "string") {
-				if (
-					objVal !== undefined &&
-					typeof objVal !== "function" &&
-					typeof objVal !== "symbol"
-				) {
-					return `"${objKey}":${jsonStringify(objVal)}`;
-				}
-			}
-		});
+	const objEntries = Object.entries(val)
+		.map(([objKey, objVal]) => {
+			const ignoreEntry =
+				objVal === undefined ||
+				typeof objVal === "function" ||
+				typeof objVal === "symbol" ||
+				typeof objKey === "symbol";
 
-		return `{${objEntries.join(",")}}`;
-	}
+			if (ignoreEntry) return;
 
-	if (typeof val === "string") {
-		return `"${val}"`;
-	}
+			return `"${objKey}":${jsonStringify(objVal)}`;
+		})
+		.filter((entriesVal) => entriesVal !== undefined);
 
-	if (val === Infinity || Number.isNaN(val)) {
-		return String(null);
-	}
-
-	if (typeof val === "bigint") {
-		throw new TypeError("Do not know how to serialize a BigInt");
-	}
-
-	if (
-		typeof val === "function" ||
-		typeof val === "symbol" ||
-		value === undefined
-	) {
-		return undefined;
-	}
-
-	if (val instanceof Map || val instanceof Set) {
-		return String({});
-	}
-
-	return String(val);
+	return `{${objEntries.join(",")}}`;
 };
 
-const value = Symbol("");
+const value = {
+	name: "foo",
+	age: 18,
+	attr: ["coding", 123],
+	uni: Symbol(2),
+	sayHi: function () {
+		console.log("hi");
+	},
+	info: {
+		sister: "lily",
+		age: 16,
+		intro: {
+			money: undefined,
+			job: null,
+		},
+	},
+};
+
 const result = jsonStringify(value);
 console.log(result);
