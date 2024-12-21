@@ -71,24 +71,3 @@ const jsonStringify = (val) => {
 
 	return `{${objEntries.join(",")}}`;
 };
-
-const value = {
-	name: "foo",
-	age: 18,
-	attr: ["coding", 123],
-	uni: Symbol(2),
-	sayHi: function () {
-		console.log("hi");
-	},
-	info: {
-		sister: "lily",
-		age: 16,
-		intro: {
-			money: undefined,
-			job: null,
-		},
-	},
-};
-
-const result = jsonStringify(value);
-console.log(result);
